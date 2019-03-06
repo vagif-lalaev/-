@@ -1,0 +1,110 @@
+package com.javarush.games.snake;
+
+import com.javarush.engine.cell.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Snake {
+    private List<GameObject> snakeParts = new ArrayList<>();
+
+    public Snake(int x, int y) {
+        GameObject go1 = new GameObject(x, y);
+        GameObject go2 = new GameObject(x + 1, y);
+        GameObject go3 = new GameObject(x + 2, y);
+        snakeParts.add(go1);
+        snakeParts.add(go2);
+        snakeParts.add(go3);
+    }
+
+    private static final String HEAD_SIGN = "\uD83D\uDC35"; /*"\uD83D\uDC7E"; */ //отрисовка головы змеи
+    private static final String BODY_SIGN = "۞"; //"\u26AB"; //отрисовка тела змеи
+
+    public boolean isAlive = true; //состояние змеи жива или нет
+
+    private Direction direction = Direction.LEFT;
+
+    //метод не позволяет поворачиватся змеи на 180 градусов
+    public void setDirection(Direction direction) {
+        if (this.direction == Direction.LEFT && direction != Direction.RIGHT) {
+            this.direction = direction;
+            if (snakeParts.get(0).x == snakeParts.get(1).x) this.direction = Direction.LEFT;
+        } else if (this.direction == Direction.RIGHT && direction != Direction.LEFT) {
+            this.direction = direction;
+            if (snakeParts.get(0).x == snakeParts.get(1).x) this.direction = Direction.RIGHT;
+        } else if (this.direction == Direction.UP && direction != Direction.DOWN) {
+            this.direction = direction;
+            if (snakeParts.get(0).y == snakeParts.get(1).y) this.direction = Direction.UP;
+        } else if (this.direction == Direction.DOWN && direction != Direction.UP) {
+            this.direction = direction;
+            if (snakeParts.get(0).y == snakeParts.get(1).y) this.direction = Direction.DOWN;
+        }
+    }
+
+    //начальное расположение и вид змеи на игровом поле
+    public void draw(Game game) {
+        for (int i = 0; i < snakeParts.size(); i++) {
+            if (isAlive) {
+                if (i == 0) {
+                    game.setCellValueEx(snakeParts.get(i).x, snakeParts.get(i).y, Color.NONE, HEAD_SIGN, Color.BLACK, 75); //цвет головы если живой
+                } else {
+                    game.setCellValueEx(snakeParts.get(i).x, snakeParts.get(i).y, Color.NONE, BODY_SIGN, Color.BLACK, 75); //цвет тела если живой
+                }
+            } else {
+                game.setCellValueEx(snakeParts.get(i).x, snakeParts.get(i).y, Color.NONE, HEAD_SIGN, Color.RED, 75); //цвет головы если не живой
+                game.setCellValueEx(snakeParts.get(i).x, snakeParts.get(i).y, Color.NONE, BODY_SIGN, Color.RED, 75); //цвет тела если не живой
+            }
+        }
+    }
+
+    //В методе move(Apple), если координаты новой головы змеи совпадают с координатами яблока, необходимо установить яблоку isAlive=false и не удалять хвост змеи.
+    public void move(Apple apple) {
+        GameObject newGameObject = createNewHead();
+//если выходят за рамки поля то возвращаем false
+        if (newGameObject.x < 0 || newGameObject.y < 0 || newGameObject.y >= SnakeGame.HEIGHT || newGameObject.x >= SnakeGame.WIDTH) {
+            isAlive = false;
+        } else if (!checkCollision(newGameObject)) {
+            snakeParts.add(0, newGameObject); //создаем новую голову
+            if (apple.x == newGameObject.x && apple.y == newGameObject.y) apple.isAlive = false;
+            else removeTail();
+        } else {
+            isAlive = false;
+        }
+    }
+
+    // метод движения змеи во все 4 стороны
+    public GameObject createNewHead() {
+        GameObject gameObject = new GameObject(0, 0);
+        switch (direction) {
+            case LEFT:
+                return gameObject = new GameObject(snakeParts.get(0).x - 1, snakeParts.get(0).y);
+            case RIGHT:
+                return gameObject = new GameObject(snakeParts.get(0).x + 1, snakeParts.get(0).y);
+            case DOWN:
+                return gameObject = new GameObject(snakeParts.get(0).x, snakeParts.get(0).y + 1);
+            case UP:
+                return gameObject = new GameObject(snakeParts.get(0).x, snakeParts.get(0).y - 1);
+        }
+        return gameObject;
+    }
+
+    // метод удаление последней ячейки хвоста змеи
+    public void removeTail() {
+        snakeParts.remove(snakeParts.size() - 1);
+    }
+
+    // метод сравнивает кардинаты и проверяет столкновение с собственным телом
+    public boolean checkCollision(GameObject gameObject) {
+        boolean result = false;
+        for (GameObject temp : snakeParts) {
+            if (gameObject.x == temp.x && gameObject.y == temp.y) {
+                result = true;
+            }
+        }
+        return result;
+    }
+
+    public int getLength() {
+        return snakeParts.size();
+    }
+}
