@@ -1,0 +1,104 @@
+package com.javarush.games.snake;
+
+import com.javarush.engine.cell.*;
+
+public class SnakeGame extends Game {
+    public static final int WIDTH = 15;
+    public static final int HEIGHT = 15;
+
+    private Snake snake;
+
+    private int turnDelay;
+
+    private Apple apple;
+
+    private boolean isGameStopped;
+
+    private static final int GOAL = 28; //максимально возможная длинна змеи
+
+    private int score; //счетчик очков
+
+    @Override
+    public void initialize() {
+    setScreenSize(WIDTH, HEIGHT); //размер игрового поля
+    createGame();
+    }
+
+    private void createGame(){
+        snake = new Snake(WIDTH/2, HEIGHT/2);
+        createNewApple(); //метод создает новое яблоко на поле, случайным образом
+        isGameStopped = false;
+        drawScene(); //метод отвечает за цвет фона
+        turnDelay = 300; //скорость начало игры мс/ход
+        setTurnTimer(turnDelay);
+        score = 0; //начальные очки
+        setScore(score); //метод отбражение очков на экране
+    }
+
+    private void drawScene() {
+        for (int i = 0; i < WIDTH; i++) {
+            for (int j = 0; j < HEIGHT; j++) {
+                setCellValueEx(i, j, Color.DARKSLATEGRAY, ""); //цвет фона
+            }
+        }
+        snake.draw(this);
+        apple.draw(this);
+    }
+
+    @Override
+    public void onTurn(int step) {
+        snake.move(apple);
+        if (apple.isAlive == false) {
+            createNewApple(); //если яблоко съедено то, создаем новое
+            score += 5; //после седения яблока, добовляем очки
+            setScore(score); //передаем измененое значение очков
+            turnDelay -= 10; //увеличиваем скорость движения змеи
+            setTurnTimer(turnDelay); //передаем измененое значение в метод рег.скорость движения змеи
+        }
+        if (snake.isAlive == false) gameOver(); //если змея не живая, то выводим метод конец игры
+        if (snake.getLength() > GOAL) win(); //если длинна змеи больше чем GOAL то вызывается метод победы
+        drawScene();
+    }
+
+    @Override
+    public void onKeyPress(Key key) {
+        switch (key) {
+            case LEFT:
+                snake.setDirection(Direction.LEFT);
+                break;
+            case RIGHT:
+                snake.setDirection(Direction.RIGHT);
+                break;
+            case UP:
+                snake.setDirection(Direction.UP);
+                break;
+            case DOWN:
+                snake.setDirection(Direction.DOWN);
+                break;
+            case SPACE: //если метод isGameStopped == true то вызываем createGame
+                if (isGameStopped) createGame();
+        }
+    }
+//случайное создания кординат расположения яблока
+    private void createNewApple() {
+        //если метод checkCollision == true то продолжаем создовать яблоки
+        do {
+            Apple appleRandom = new Apple(getRandomNumber(WIDTH), getRandomNumber(HEIGHT)); //случайные координаты яблоко
+            apple = appleRandom;
+        } while (snake.checkCollision(apple));
+
+    }
+    //сообщение в случаи поражение игры
+    private void gameOver() {
+        stopTurnTimer();
+        isGameStopped = true;
+        showMessageDialog(Color.NONE,"\uD83D\uDE48 "+ "GAME OVER" + " \uD83D\uDE48", Color.INDIANRED, 45); //оформелние текста
+
+    }
+    //метод победы (сообщение в случаи победы)
+    private void win() {
+        stopTurnTimer();
+        isGameStopped = true;
+        showMessageDialog(Color.NONE, "\uD83D\uDE0E " + "YOU WIN" + " \uD83D\uDE0E", Color.FORESTGREEN, 55); //оформелние текста
+    }
+}
