@@ -1,0 +1,18 @@
+package com.javarush.games.snake;
+
+import com.javarush.engine.cell.*;
+
+public class Apple extends GameObject {
+    static private final String APPLE_SIGN = "\uD83C\uDF4E"; //символ яблако
+
+    public boolean isAlive = true; //состояния яблока есть или нет
+
+    public Apple(int x, int y) {
+        super(x, y);
+    }
+
+    public void draw(Game game) {
+        //устанавливает кардинаты распол.яблоко, фон клетки, цвет яблака и размер
+        game.setCellValueEx(x, y, Color.NONE, APPLE_SIGN, Color.INDIANRED, 75);
+    }
+}
